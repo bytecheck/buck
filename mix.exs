@@ -32,7 +32,7 @@ defmodule Buck.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp _deps do
     [
-      {:amqp, "~> 4.0", override: true},
+      {:amqp, "~> 4.0"},
       {:rabbit, "~> 0.20"},
       # test/docs
       {:ex_doc, "~> 0.36", only: [:test], runtime: false},
