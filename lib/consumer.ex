@@ -41,6 +41,7 @@ defmodule Buck.Consumer do
           Logger.info("""
           #{__MODULE__} did not subscribe, because auto_subscribed? is #{inspect(auto_sub?)}
           """)
+
           :ignore
         end
       end
@@ -81,11 +82,12 @@ defmodule Buck.Consumer do
       def handle_message(%{decoded_payload: decoded_payload} = message) do
         # Handle consumed messages
 
-        payload = if Map.get(message, :decoded_payload) == nil do
-          inspect(message.payload)
-        else
-          inspect(message.decoded_payload)
-        end
+        payload =
+          if Map.get(message, :decoded_payload) == nil do
+            inspect(message.payload)
+          else
+            inspect(message.decoded_payload)
+          end
 
         Logger.info("""
         [#{__MODULE__}] processing incoming message
@@ -107,24 +109,26 @@ defmodule Buck.Consumer do
 
       @impl Rabbit.Consumer
       def handle_error(message) do
-          reject_count = _get_count(message.meta.headers)
-          payload = if message.decoded_payload do
+        reject_count = _get_count(message.meta.headers)
+
+        payload =
+          if message.decoded_payload do
             inspect(message.decoded_payload)
           else
             inspect(message.payload)
           end
 
-          Logger.error("""
-            #{__MODULE__} failed to process message
-            Retry count: #{reject_count}
-            Message id: #{message.meta.message_id}
-            Error: #{inspect(message.error_reason)}
-            Stacktrace: #{inspect(message.error_stack)}
-            Channel: #{inspect(message.channel)}
-            Meta: #{inspect(message.meta)}
-            Redilevered?: #{message.meta.redelivered}
-            Payload: #{payload}
-          """)
+        Logger.error("""
+          #{__MODULE__} failed to process message
+          Retry count: #{reject_count}
+          Message id: #{message.meta.message_id}
+          Error: #{inspect(message.error_reason)}
+          Stacktrace: #{inspect(message.error_stack)}
+          Channel: #{inspect(message.channel)}
+          Meta: #{inspect(message.meta)}
+          Redilevered?: #{message.meta.redelivered}
+          Payload: #{payload}
+        """)
 
         {:reject, message, requeue: not message.meta.redelivered}
       end
@@ -133,8 +137,11 @@ defmodule Buck.Consumer do
 
       defp _get_count(headers) do
         case Enum.find(headers, fn {k, _type, _value} -> k == "x-death" end) do
-          {"x-death", _, [table: table]} -> Enum.find(table, fn {k, _, _} -> k == "count" end) |> elem(2)
-          _ -> nil
+          {"x-death", _, [table: table]} ->
+            Enum.find(table, fn {k, _, _} -> k == "count" end) |> elem(2)
+
+          _ ->
+            nil
         end
       end
 
