@@ -34,6 +34,7 @@ defmodule Buck.MixProject do
     [
       {:amqp, "~> 4.0"},
       {:rabbit, "~> 0.20"},
+      {:uuid, "~> 1.1"},
       # test/docs
       {:ex_doc, "~> 0.36", only: [:test], runtime: false},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
