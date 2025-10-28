@@ -15,6 +15,7 @@ defmodule Buck.Consumer do
 
       @otp_app Keyword.fetch!(opts, :otp_app)
       @bind Keyword.fetch!(opts, :bind)
+      @create_deadletter_queue Keyword.get(opts, :create_deadletter_queue?, true)
 
       @behaviour Buck.Consumer
 
@@ -57,15 +58,22 @@ defmodule Buck.Consumer do
             _exchange_only()[:options]
           )
 
-        {:ok, _} = AMQP.Queue.declare(state.channel, _error_queue(), durable: true)
+        deadletter_queue_arguments =
+          if @create_deadletter_queue == true do
+            {:ok, _} = AMQP.Queue.declare(state.channel, _error_queue(), durable: true)
+
+            [
+              {"x-dead-letter-exchange", :longstr, ""},
+              {"x-dead-letter-routing-key", :longstr, _error_queue()}
+            ]
+          else
+            []
+          end
 
         {:ok, _} =
           AMQP.Queue.declare(state.channel, _queue(),
             durable: true,
-            arguments: [
-              {"x-dead-letter-exchange", :longstr, ""},
-              {"x-dead-letter-routing-key", :longstr, _error_queue()}
-            ]
+            arguments: deadletter_queue_arguments
           )
 
         Enum.each(@bind, fn b ->
